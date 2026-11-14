@@ -10,7 +10,7 @@ datasource db {
 // Base models
 model Profile {
   id          String   @id @default(uuid())
-  name        String?
+  name        String? 
   email       String   @unique
   role        String   @default("STUDENT")
   status      String   @default("ACTIVE")
@@ -154,21 +154,7 @@ model Subject {
   updatedAt   DateTime @updatedAt
 }
 
-// Attendance Record model
-model AttendanceRecord {
-  id             String   @id @default(uuid())
-  student        Student  @relation(fields: [studentId], references: [id])
-  studentId      String
-  classSession   ClassSession @relation(fields: [classSessionId], references: [ClassSession])
-  classSessionId String
-  status       AttendanceStatus  @default(ABSENT)
-  markedAt       DateTime @default(now())
-  markedBy       Faculty? @relation(fields: [markedById], references: [Faculty])
-  markedById     String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-}
-
+// Attendance Status enum
 enum AttendanceStatus {
   PRESENT
   ABSENT
@@ -231,7 +217,7 @@ model InternalMarks {
   assessment     InternalAssessment @relation(fields: [assessmentId], references: [InternalAssessment.id])
   assessmentId   String
   obtainedMarks    Int
-  attendancePercentage Int
+  attendancePercentage Float
   finalGrade     String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
