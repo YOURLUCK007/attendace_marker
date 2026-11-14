@@ -1,0 +1,277 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Base models
+model Profile {
+  id          String   @id @default(uuid())
+  name        String?
+  email       String   @unique
+  role        String   @default("STUDENT")
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Role {
+  id   String   @id @default(uuid())
+  name String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Permission {
+  id   String   @id @default(uuid())
+  name String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Department model
+model Department {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  faculty     Faculty[]
+  students    Student[]
+}
+
+// Course model
+model Course {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  description String?
+  department  Department @relation(fields: [departmentId], references: [id])
+  departmentId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  students    Student[]
+  subjects    Subject[]
+}
+
+// Academic Year model
+model AcademicYear {
+  id          String   @id @default(uuid())
+  name        String   // e.g., "2024-2025"
+  startDate   DateTime
+  endDate     DateTime
+  isCurrent   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  semesters   Semester[]
+  students    Student[]
+}
+
+// Semester model
+model Semester {
+  id          String   @id @default(uuid())
+  name        String   // e.g., "Fall", "Spring"
+  year        AcademicYear @relation(fields: [yearId], references: [id])
+  yearId      String
+  code        String
+  isCurrent   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  subjects    Subject[]
+  classes     Class[]
+}
+
+// Class model
+model Class {
+  id          String   @id @default(uuid())
+  name        String   // e.g., "CS 101"
+  code        String   @unique
+  semester    Semester @relation(fields: [semesterId], references: [id])
+  semesterId  String
+  teacher     Faculty?
+  teacherId   String?
+  students    Student[]
+  attendanceSessions AttendanceSession[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Student model
+model Student {
+  id              String   @id @default(uuid())
+  registerNumber  String   @unique
+  firstName       String
+  lastName        String
+  email           String   @unique
+  phone           String?
+  department      Department @relation(fields: [departmentId], references: [id])
+  departmentId    String
+  course          Course?  @relation(fields: [courseId], references: [id])
+  courseId        String?
+  currentSemester Semester @relation(fields: [currentSemesterId], references: [id])
+  currentSemesterId String?
+  profile         Profile  @unique
+  profileId       String
+  attendanceRecords AttendanceRecord[]
+  internalMarks   InternalMark[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Faculty model
+model Faculty {
+  id            String   @id @default(uuid())
+  firstName     String
+  lastName      String
+  email         String   @unique
+  phone         String?
+  department    Department @relation(fields: [departmentId], references: [id])
+  departmentId  String
+  subjects      Subject[]
+  classAssignments Class[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Subject model
+model Subject {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  credits     Int
+  department  Department @relation(fields: [departmentId], references: [id])
+  departmentId String
+  faculty     Faculty? @relation(fields: [facultyId], references: [id])
+  facultyId   String?
+  classes     Class[]
+  attendanceSessions AttendanceSession[]
+  internalAssessments InternalAssessment[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Attendance Record model
+model AttendanceRecord {
+  id             String   @id @default(uuid())
+  student        Student  @relation(fields: [studentId], references: [id])
+  studentId      String
+  classSession   ClassSession @relation(fields: [classSessionId], references: [ClassSession])
+  classSessionId String
+  status       AttendanceStatus  @default(ABSENT)
+  markedAt       DateTime @default(now())
+  markedBy       Faculty? @relation(fields: [markedById], references: [Faculty])
+  markedById     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  ON_DUTY
+  APPROVED_LEAVE
+  CANCELLED_SESSION
+}
+
+// ClassSession model
+model ClassSession {
+  id             String   @id @default(uuid())
+  class          Class    @relation(fields: [classId], references: [Class.id])
+  classId        String
+  subject        Subject  @relation(fields: [subjectId], references: [Subject.id])
+  subjectId      String
+  date           DateTime
+  startTime      DateTime
+  endTime        DateTime?  
+  attendanceRecords AttendanceRecord[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Internal Assessment model
+model InternalAssessment {
+  id               String   @id @default(uuid())
+  name             String
+  type             AssessmentType
+  maxMarks         Int
+  minAttendance    Int?     // Minimum attendance percentage required
+  weight           Float    @default(1.0)  // Weightage
+  semester         Semester @relation(fields: [semesterId], references: [Semester.id])
+  semesterId       String?
+  subject          Subject  @relation(fields: [subjectId], references: [Subject.id])
+  subjectId        String
+  faculty          Faculty  @relation(fields: [facultyId], references: [Faculty.id])
+  facultyId        String
+  academicYear     AcademicYear @relation(fields: [academicYearId], references: [AcademicYear.id])
+  academicYearId   String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+enum AssessmentType {
+  INTERNAL_TEST_1
+  INTERNAL_TEST_2
+  ASSIGNMENT
+  PROJECT
+  PRACTICAL
+  OTHER
+}
+
+// Internal Marks model
+model InternalMarks {
+  id             String   @id @default(uuid())
+  student        Student  @relation(fields: [studentId], references: [Student.id])
+  studentId      String
+  subject        Subject  @relation(fields: [subjectId], references: [Subject.id])
+  subjectId      String
+  assessment     InternalAssessment @relation(fields: [assessmentId], references: [InternalAssessment.id])
+  assessmentId   String
+  obtainedMarks    Int
+  attendancePercentage Int
+  finalGrade     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Enrollment model
+model Enrollment {
+  id               String   @id @default(uuid())
+  student          Student  @relation(fields: [studentId], references: [Student.id])
+  studentId        String
+  course           Course   @relation(fields: [courseId], references: [Course.id])
+  courseId         String
+  semester         Semester @relation(fields: [semesterId], references: [Semester.id])
+  semesterId       String
+  academicYear     AcademicYear @relation(fields: [academicYearId], references: [AcademicYear.id])
+  academicYearId   String
+  enrolledAt       DateTime @default(now())
+  status           String   @default("ACTIVE")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// Audit Log model
+model AuditLog {
+  id             String   @id @default(uuid())
+  action         String
+  entityType     String   // e.g., "STUDENT", "ATTENDANCE", "MARKS"
+  entityId       String
+  performedBy    String   // UUID of the user who performed the action
+  performedByRole String   // e.g., "ADMIN", "FACULTY"
+  details        Json?
+  createdAt      DateTime @default(now())
+}
+
+// System Settings model
+model SystemSettings {
+  id             String   @id @default(uuid())
+  key            String   @unique
+  value          String
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

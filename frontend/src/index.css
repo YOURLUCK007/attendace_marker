@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .sidebar-link {
+    @apply block rounded-md px-3 py-2 text-sm font-medium text-#69798B hover:text-#172B4D hover:bg-[#F4F6F9];
+  }
+  .nav-link {
+    @apply block rounded-md px-3 py-2 text-sm font-medium text-#69798B hover:text-#172B4D hover:bg-[#F4F6F9];
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm font-medium text-white bg-#172B4D hover:bg-#365B85;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm font-medium text-#182536 bg-[#F4F6F9] hover:bg-[#E4E8EB];
+  }
+  .table-row {
+    @apply hover:bg-[#F4F6F9];
+  }
+  .status-present {
+    @apply bg-[#D64545] text-white;
+  }
+  .status-absent {
+    @apply bg-[#D99A26] text-white;
+  }
+  .status-on-duty {
+    @apply bg-[#365B85] text-white;
+  }
+  .status-approved-leave {
+    @apply bg-[#16845B] text-white;
+  }
+}
+
